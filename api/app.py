@@ -41,7 +41,7 @@ except Exception as e:
     raise ConnectionError('Unable to connect to database. Credentials may be invalid')
 
 
-class MyApp(Resource):
+class MyMDB(Resource):
     def get(self):
         res = {}
         title = None
@@ -140,8 +140,25 @@ class MyApp(Resource):
             print('ERROR OPERATING WITH REDIS: ' + str(redis_err))
             abort(500, error='Redis Error')
 
+class Meta(Resource):
+    def get(self):
+        try:
+            ps_connection = postgresql_pool.getconn()
+            cur = ps_connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            query = "select last_updated from meta limit 1"
+            cur.execute(query)
+            queryResult = cur.fetchone()
+            cur.close()
+            postgresql_pool.putconn(ps_connection)
+            response =  {}
+            response['lastUpdated'] = str(queryResult['last_updated'])
+            return response
+        except Exception as e:
+            print(str(e))
+            abort(500, error='Metadata Error')
 
-api.add_resource(MyApp, '/q')
+api.add_resource(MyMDB, '/q')
+api.add_resource(Meta, '/meta')
 
 if __name__ == '__main__':
     app.run(debug=True)

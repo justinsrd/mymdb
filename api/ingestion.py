@@ -4,6 +4,7 @@ import time
 import sys
 import psycopg2
 from io import StringIO
+from datetime import datetime
 
 csv.field_size_limit(sys.maxsize)
 start = int(time.time() * 1000)
@@ -24,6 +25,7 @@ def save_data_to_db(shows, episodes):
 
         cur.execute('TRUNCATE episode; DELETE from episode;')
         cur.execute('TRUNCATE show; DELETE from show;')
+        cur.execute('TRUNCATE meta; DELETE from meta;')
         conn.commit()
 
         shows_query = ''
@@ -40,6 +42,10 @@ def save_data_to_db(shows, episodes):
 
         episode_data = StringIO(episodes_query)
         cur.copy_from(episode_data, 'episode', null=r'\N', columns=('show_id', 'episode_id', 'episode_title', 'season', 'episode', 'rating', 'votes'))
+        conn.commit()
+
+        current_date = datetime.now()
+        cur.execute("INSERT INTO meta (last_updated) VALUES (%s)", (current_date,))
         conn.commit()
 
     except Exception as e:

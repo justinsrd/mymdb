@@ -20,3 +20,8 @@ CREATE TABLE poster (
     show_id text PRIMARY KEY,
     poster_url text
 );
+
+CREATE TABLE meta (
+    last_updated TIMESTAMP
+)
+
